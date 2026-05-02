@@ -12,14 +12,6 @@ type Props = {
   onHasStrokeChange: (hasStroke: boolean) => void;
 };
 
-// 描画領域の余白設定を定数として定義（リファクタリング対応）
-const CHART_MARGINS = {
-  marginTop: 12,
-  marginRight: 8,
-  marginBottom: 24,
-  marginLeft: 44,
-};
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -85,14 +77,15 @@ export function DrawVariationChart({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    // --- 描画領域の計算 (定数を使用) ---
-    const plotWidth = width - CHART_MARGINS.marginLeft - CHART_MARGINS.marginRight;
-    const plotHeight = height - CHART_MARGINS.marginTop - CHART_MARGINS.marginBottom;
+    const marginTop = 12;
+    const marginRight = 8;
+    const marginBottom = 24;
+    const marginLeft = 44;
+    const plotWidth = width - marginLeft - marginRight;
+    const plotHeight = height - marginTop - marginBottom;
 
-    const toX = (x: number) => CHART_MARGINS.marginLeft + x * plotWidth;
-    const toY = (y: number) => CHART_MARGINS.marginTop + y * plotHeight;
-    // ------------------------------------
-
+    const toX = (x: number) => marginLeft + x * plotWidth;
+    const toY = (y: number) => marginTop + y * plotHeight;
 
     ctx.fillStyle = "#0f1419";
     ctx.fillRect(0, 0, width, height);
@@ -100,30 +93,30 @@ export function DrawVariationChart({
     ctx.strokeStyle = "rgba(148, 163, 184, 0.2)";
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
-      const y = CHART_MARGINS.marginTop + (plotHeight / 4) * i;
+      const y = marginTop + (plotHeight / 4) * i;
       ctx.beginPath();
-      ctx.moveTo(CHART_MARGINS.marginLeft, y);
-      ctx.lineTo(width - CHART_MARGINS.marginRight, y);
+      ctx.moveTo(marginLeft, y);
+      ctx.lineTo(width - marginRight, y);
       ctx.stroke();
     }
 
     for (let i = 0; i <= 6; i++) {
-      const x = CHART_MARGINS.marginLeft + (plotWidth / 6) * i;
+      const x = marginLeft + (plotWidth / 6) * i;
       ctx.beginPath();
-      ctx.moveTo(x, CHART_MARGINS.marginTop);
-      ctx.lineTo(x, height - CHART_MARGINS.marginBottom);
+      ctx.moveTo(x, marginTop);
+      ctx.lineTo(x, height - marginBottom);
       ctx.stroke();
     }
 
     ctx.fillStyle = "#8b9aab";
     ctx.font = "11px system-ui";
     ctx.textAlign = "left";
-    ctx.fillText(`+${maxAbsPercent}%`, 6, CHART_MARGINS.marginTop + 4);
-    ctx.fillText("0%", 6, CHART_MARGINS.marginTop + plotHeight / 2 + 4);
-    ctx.fillText(`-${maxAbsPercent}%`, 6, height - CHART_MARGINS.marginBottom - 2);
+    ctx.fillText(`+${maxAbsPercent}%`, 6, marginTop + 4);
+    ctx.fillText("0%", 6, marginTop + plotHeight / 2 + 4);
+    ctx.fillText(`-${maxAbsPercent}%`, 6, height - marginBottom - 2);
 
     ctx.textAlign = "right";
-    ctx.fillText(horizontalAxisLabel, width - CHART_MARGINS.marginRight, height - 4);
+    ctx.fillText(horizontalAxisLabel, width - marginRight, height - 4);
 
     if (points.length > 0) {
       ctx.strokeStyle = "#3b82f6";
@@ -143,28 +136,14 @@ export function DrawVariationChart({
     }
   }, [points, maxAbsPercent, horizontalAxisLabel]);
 
-  // --- 修正箇所: pointFromEvent のロジックをプロットエリア相対座標に変換 ---
   const pointFromEvent = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
-
-    // 1. キャンバス上の物理座標を取得
-    const canvasX = event.clientX - rect.left;
-    const canvasY = event.clientY - rect.top;
-
-    // 2. プロットエリア（余白の内側）に対する 0.0 〜 1.0 の比率を計算
-    const plotWidth = rect.width - CHART_MARGINS.marginLeft - CHART_MARGINS.marginRight;
-    const plotHeight = rect.height - CHART_MARGINS.marginTop - CHART_MARGINS.marginBottom;
-
-    // x, y はプロットエリア内での相対座標 (0 to 1)
-    const x = clamp((canvasX - CHART_MARGINS.marginLeft) / plotWidth, 0, 1);
-    const y = clamp((canvasY - CHART_MARGINS.marginTop) / plotHeight, 0, 1);
-
+    const x = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const y = clamp((event.clientY - rect.top) / rect.height, 0, 1);
     return { x, y };
   };
-  // --------------------------------------------------------------------
-
 
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
@@ -182,7 +161,6 @@ export function DrawVariationChart({
     if (!point) return;
     setPoints((prev) => {
       const last = prev[prev.length - 1];
-      // 近接判定の閾値は、新しい座標系に合わせて調整が必要かもしれません。
       if (last && Math.abs(last.x - point.x) < 0.001 && Math.abs(last.y - point.y) < 0.001) {
         return prev;
       }
