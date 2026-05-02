@@ -10,6 +10,7 @@ export type DCARow = {
 
 const INITIAL_PRICE = 1000;
 const INVESTMENT_AMOUNT = 10_000;
+const MIN_ALLOWED_VARIATION = -99;
 
 export function calculateDCAResults(priceVariationsPercent: number[]): DCARow[] {
   const results: DCARow[] = [];
@@ -17,8 +18,9 @@ export function calculateDCAResults(priceVariationsPercent: number[]): DCARow[] 
   let totalInvestment = 0;
 
   for (let i = 0; i < priceVariationsPercent.length; i++) {
-    const currentPrice =
-      INITIAL_PRICE * (1 + priceVariationsPercent[i] / 100);
+    // Prevent zero/negative price when extreme negative variations are drawn.
+    const safeVariation = Math.max(MIN_ALLOWED_VARIATION, priceVariationsPercent[i]);
+    const currentPrice = INITIAL_PRICE * (1 + safeVariation / 100);
     const shares = INVESTMENT_AMOUNT / currentPrice;
     totalShares += shares;
     totalInvestment += INVESTMENT_AMOUNT;

@@ -59,7 +59,7 @@ git config --global user.email "your-email@example.com"
 
 ## 2. Next.js 新規プロジェクトの作成
 
-プロジェクト名は **`リポジトリ名`** と同じにすると、`BASE_PATH` のイメージが合いやすい（必須ではない）。
+プロジェクトのフォルダ名は任意。**GitHub 上の名前は §7.2 で明示指定**し、**公開 URL / `BASE_PATH` はそのリポジトリ名に従う**（フォルダ名と一致させる必要はない）。
 
 ```bash
 npx create-next-app@latest my-app
@@ -248,32 +248,34 @@ gh auth login -h github.com
 
 ### 7.2 リポジトリ作成・リモート登録・初回 push（この手順書の標準）
 
+**本手順では `gh repo create .`（カレントのフォルダ名でリポジトリ名を自動にする）は使わない。** フォルダ名がそのまま使われると、GitHub 側が **`GraphQL: Name is reserved`** などで作成を拒否することがあり、環境により再現しにくい。`<ユーザー名またはorg>/<リポジトリ名>` を **必ず自分で決めて指定する**。
+
 プロジェクトのルート（`package.json` があるディレクトリ）で実行する。
-
-```bash
-gh repo create . --public --source=. --remote=origin --push
-```
-
-これだけで次がまとめて行われる。
-
-- GitHub 上に **カレントディレクトリ名と同じ名前**のリポジトリが作成される  
-- **`origin`** が設定される  
-- 現在の **`main`** の内容が **push** される  
-
-**リポジトリ名と `BASE_PATH` の関係**: ワークフローは **`github.event.repository.name`** を `BASE_PATH` に使う。上記コマンドでは **フォルダ名 = GitHub 上のリポジトリ名**になるので、**プロジェクトを置いたフォルダ名を、公開したいパス（例: `chart_art`）に合わせておく**と混乱が少ない。
-
-オプションの例:
-
-- 非公開にする: `--private`（`--public` と置き換え）
-- 説明文を付ける: `--description "静的サイト"`
-
-**リポジトリ名を明示したい場合**（ユーザーまたは Organization 配下で名前だけ変える）:
 
 ```bash
 gh repo create <ユーザー名またはorg>/<リポジトリ名> --public --source=. --remote=origin --push
 ```
 
-例: `gh repo create kinamon/chart_art --public --source=. --remote=origin --push`
+例（Organization が `kinamon-ai` で、名前を **`chart_art_dca`** のように明示する場合など）:
+
+```bash
+gh repo create kinamon-ai/chart_art_dca --public --source=. --remote=origin --push
+```
+
+これで次がまとめて行われる。
+
+- GitHub 上に **指定した名前**のリポジトリが作成される  
+- **`origin`** が設定される  
+- 現在の **`main`** の内容が **push** される  
+
+`--source=.` は **いまいるフォルダの中身を**そのリポジトリに載せる意味であり、**ローカルのフォルダ名と GitHub のリポジトリ名が違っても問題ない**。
+
+**リポジトリ名と `BASE_PATH` の関係**: ワークフローは **`github.event.repository.name`** を `BASE_PATH` に使う。公開 URL は **`https://<ユーザー名>.github.io/<リポジトリ名>/`** になるので、**上で指定した `<リポジトリ名>`** を意識して選ぶ（予約語に近い名前・短すぎる名前は避け、衝突しにくい識別子にすると安心）。
+
+オプションの例:
+
+- 非公開にする: `--public` を `--private` に置き換え
+- 説明文を付ける: `--description "静的サイト"`
 
 ---
 
@@ -304,6 +306,8 @@ push が通ると、**ワークフローが起動する**（`.github/workflows/d
 
 ## 9. GitHub で Pages を「GitHub Actions」に設定
 
+### 9.1 Source を選ぶ（初回のみが多い）
+
 **初回だけ**（またはまだなら）ブラウザで次を実施する。
 
 1. GitHub で対象リポジトリを開く。
@@ -313,7 +317,20 @@ push が通ると、**ワークフローが起動する**（`.github/workflows/d
 
 初回デプロイ後、**Environments** に `github-pages` が現れ、Organization によっては **承認**が必要になることがある。
 
-公開 URL の目安:
+### 9.2 ワークフローを再実行する（Re-run）
+
+**§9.1 をしたタイミング**が、最初の **`git push`** による Actions 実行より**後ろ**だった場合、`deploy` ジョブが **`Failed to create deployment (status: 404)`**（Ensure GitHub Pages has been enabled の案内つき）で失敗することがある。また、Environment の **承認**を後から済ませたときも、やり直しが必要なことがある。
+
+そのときは **`push` をし直さなくてよい**ことが多い。ブラウザで次を試す。
+
+1. リポジトリの **Actions** タブを開く。
+2. 左または一覧からワークフロー（例:**Deploy to GitHub Pages**）を選び、対象の **実行（run）** を開く。
+3. 画面上部あたりの **Re-run failed jobs**（失敗したジョブだけやり直し）または **Re-run all jobs**（ワークフロー全体のやり直し）を押す。
+4.  **`deploy`** の前後に **Review deployments／承認** が出ていたら先に **Approve** してから再度実行する。
+
+これで **`deploy-pages` が成功**すれば、サイトが公開状態に近づく。なお、**Source を GitHub Actions に切り替えたあと**は、迷ったら **一度 Re-run** しておくと安全なことが多い。
+
+公開 URL の目安（**§7.2 で指定したリポジトリ名**がパスになる）:
 
 ```text
 https://<ユーザー名>.github.io/<リポジトリ名>/
@@ -334,7 +351,8 @@ https://<ユーザー名>.github.io/<リポジトリ名>/
 | 現象 | 確認すること |
 |------|----------------|
 | Actions で `npm ci` が失敗 | **`package-lock.json` がコミットされているか** |
-| 真っ白・404 | **`BASE_PATH` とリポジトリ名**が一致しているか（ワークフローの式なら通常一致）、Pages のソースが **GitHub Actions** か |
+| 真っ白・404 | **`BASE_PATH` とリポジトリ名**が一致しているか（ワークフローの式なら通常一致）、Pages のソースが **GitHub Actions** か、**§9.2 の Re-run** で `deploy` が成功したか |
+| `deploy` が 404（Pages 有効化の案内） | **Settings → Pages** で Source が **GitHub Actions** になった **あと**、**§9.2**（Re-run）を実施 |
 | ワークフローが動かない | **デフォルトブランチ**が `main`/`master` 以外なら、ワークフローの `branches` に追加 |
 | `push` できない | **`gh auth status` / `gh auth login` を再実行**（本手順は `gh` 前提） |
 
@@ -362,14 +380,15 @@ https://<ユーザー名>.github.io/<リポジトリ名>/
 - [ ] `npm install` → `npm run build` がローカルで成功
 - [ ] **`package-lock.json` をコミット**
 - [ ] `git init` → `main` → 初回コミット
-- [ ] **`gh --version`** で CLI 確認 → **`gh auth login`** → **`gh repo create . --public --source=. --remote=origin --push`**（§7）
+- [ ] **`gh --version`** で CLI 確認 → **`gh auth login`** → **`gh repo create <owner>/<リポジトリ名> --public --source=. --remote=origin --push`**（§7・**明示名必須**）
 - [ ] （§7 で push 済みならスキップ）**`git push -u origin main`**（§8）
-- [ ] **Settings → Pages → Source: GitHub Actions**（§9）
+- [ ] **Settings → Pages → Source: GitHub Actions**（§9.1）
+- [ ] 必要なら **Actions → Re-run failed jobs / Re-run all jobs**（§9.2）
 - [ ] Actions 成功 → サイト URL を確認
 
 ---
 
-以上が、Next.js 新規作成から GitHub Pages 公開までの **一通りの手順**です。既存リポジトリ（本プロジェクト）では **すでに Next 設定とワークフローがある**ため、主に **§6〜§9（Git・`gh repo create`・必要なら push・Pages 設定）** を順に実施すればよいです。
+以上が、Next.js 新規作成から GitHub Pages 公開までの **一通りの手順**です。既存リポジトリ（本プロジェクト）では **すでに Next 設定とワークフローがある**ため、主に **§6〜§9（Git・`gh repo create`・必要なら push・Pages 設定と Re-run）** を順に実施すればよいです。
 
 ---
 
@@ -384,16 +403,17 @@ https://<ユーザー名>.github.io/<リポジトリ名>/
 | ローカル | Node の確認、`create-next-app`、`next.config` の編集、`.github/workflows/deploy-pages.yml` の追加 |
 | ビルド | `npm install` / `npm run build`、`package-lock.json` の生成とコミット |
 | Git | `git init`、`main`、コミット |
-| GitHub 側の「箱」と初回反映 | **`gh auth login` 済み**のうえで **`gh repo create ... --source=. --remote=origin --push`** により、**リポジトリ作成・`origin`・初回 push を一括で実行**できる |
+| GitHub 側の「箱」と初回反映 | **`gh auth login` 済み**のうえで **`gh repo create <owner>/<名前> --source=. --remote=origin --push`**（**明示名必須**）により、**リポジトリ作成・`origin`・初回 push を一括で実行**できる |
 | デプロイ処理 | **`push` 後**、GitHub Actions が **ビルド → `out/` を Pages 用にアップロード → 公開**まで実行（ワークフロー成功が前提） |
-| 日常の更新 | **`main` に push するだけ**で、再ビルド・再公開が走る（§9 は初回のみ） |
+| 日常の更新 | **`main` に push するだけ**で、再ビルド・再公開が走る（§9.1 の Source 設定は初回のみ） |
 
 ### ブラウザや Web・対話が挟まりやすい部分（手動寄り）
 
 | 区分 | 内容 |
 |------|------|
 | **`gh auth login`** | 多くの場合、**ブラウザでログインまたはデバイス認証**が必要。トークン貼り付け方式を選べばブラウザは省略できることもあるが、初回セットアップの「人が一度介入する」ステップになりやすい。 |
-| **§9: Pages の Source を「GitHub Actions」に設定** | **GitHub の Web**（Settings → Pages）での選択が、本手順書の**既定ルート**。**このリポジトリでは API に頼らず UI で確実に済ませる。** |
+| **§9.1: Pages の Source を「GitHub Actions」に設定** | **GitHub の Web**（Settings → Pages）での選択が、本手順書の**既定ルート**。**このリポジトリでは API に頼らず UI で確実に済ませる。** |
+| **§9.2: Re-run** | Source 変更や初回失敗のあと、**Actions 上でワークフローを再実行**する操作。ブラウザから行う。 |
 | **Organization** | Actions / Pages の禁止、**Environment `github-pages` の承認フロー**などで、**Web 上の承認**が入ることがある。 |
 | **`create-next-app` の対話** | 手順 §2 は対話例。完全にコマンドだけにしたい場合は、`create-next-app` の **非対話フラグ**（公式ドキュメント参照）で初期選択を固定できる。 |
 
@@ -402,5 +422,5 @@ https://<ユーザー名>.github.io/<リポジトリ名>/
 ### 一言でいうと
 
 - **「毎回の公開作業」そのもの**は、**`git push` → Actions** でかなり自動に近い。
-- **初回だけ**、**`gh` のログイン**と **Pages の Source 切り替え（§9）** が、多くの環境で **Web／ブラウザが必要**になりやすい。
-- §9 を一度済ませれば、**通常はもう Web を開かず**に push だけで更新できる。
+- **初回だけ**、**`gh` のログイン**と **Pages の Source 切り替え（§9.1）**、状況により **Re-run（§9.2）** が、多くの環境で **Web／ブラウザが必要**になりやすい。
+- §9.1 を一度済ませれば、**通常はもう Web を開かず**に push だけで更新できる（失敗時は §9.2）。
