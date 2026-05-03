@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import {
   SIMULATOR_CONSTANTS,
   calculateDCAResults,
@@ -27,6 +27,7 @@ export function Simulator() {
   const [showResults, setShowResults] = useState(false);
   const [results, setResults] = useState<ReturnType<typeof calculateDCAResults>>([]);
   const [chartResetSeed, setChartResetSeed] = useState(0);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const selectedVertical = useMemo(
     () =>
@@ -40,6 +41,11 @@ export function Simulator() {
     const next = calculateDCAResults(variations);
     setResults(next);
     setShowResults(true);
+
+    // 少し待機してから結果までスクロール（DOMの描画を待つ）
+    setTimeout(() => {
+      resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   const resetForm = () => {
@@ -215,6 +221,7 @@ export function Simulator() {
       {showResults && summary && (
         <>
           <section
+            ref={resultsRef}
             style={{
               background: "var(--surface)",
               borderRadius: 12,

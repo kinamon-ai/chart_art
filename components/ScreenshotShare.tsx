@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import html2canvas from "html2canvas";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,8 +32,69 @@ type Props = {
 
 export function ScreenshotShare({ results, summary, variations }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
-  // チャートの共通オプション
+  // 画像として保存（またはシェア）
+  const handleSaveImage = async () => {
+    if (!cardRef.current) return;
+    setIsProcessing(true);
+    setPreviewUrl(null);
+
+    try {
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: "#0f1419",
+        scale: 2,
+        useCORS: true,
+      });
+
+      // iOSとの相性を考慮して image/jpeg を使用
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url); // 長押し保存用にプレビューを表示
+
+        const file = new File([blob], "chart-art-result.jpg", { type: "image/jpeg" });
+
+        // Share API 試行
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Chart Art Result",
+            });
+          } catch (err) {
+            // ユーザーによるキャンセル以外はエラー表示
+            if ((err as Error).name !== "AbortError") console.error(err);
+          }
+        } else {
+          // PC等のフォールバック
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "chart-art-result.jpg";
+          a.click();
+        }
+      }, "image/jpeg", 0.9);
+    } catch (err) {
+      console.error(err);
+      alert("画像の生成に失敗しました。");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCopyText = async () => {
+    const text = `ドルコスト平均法シミュレーション結果\n最終損益: ${summary.profitLoss.toLocaleString()}円 (${summary.profitLossRate.toFixed(2)}%)\n#ChartArt #DCA\n${window.location.href}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("結果をコピーしました！");
+    } catch (err) {
+      alert("コピーに失敗しました。");
+    }
+  };
+
   const commonOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -51,19 +113,11 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        onClick={() => { setIsOpen(true); setPreviewUrl(null); }}
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "0.5rem",
-          padding: "0.65rem 1.25rem",
-          borderRadius: 8,
-          border: "none",
-          background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
-          color: "#fff",
-          fontWeight: 600,
-          cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+          display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.65rem 1.25rem",
+          borderRadius: 8, border: "none", background: "linear-gradient(135deg, #6366f1 0%, #a855f7 100%)",
+          color: "#fff", fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
         }}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -72,70 +126,31 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
         シェア用画面を表示
       </button>
 
-      {/* モーダルオーバーレイ */}
       {isOpen && (
         <div 
           style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "20px",
-            backdropFilter: "blur(4px)",
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.95)", display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px", overflowY: "auto",
           }}
           onClick={() => setIsOpen(false)}
         >
           <div 
+            ref={cardRef}
             style={{
-              width: "100%",
-              maxWidth: "380px",
-              background: "#0f1419",
-              borderRadius: "20px",
-              padding: "24px",
-              position: "relative",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-              border: "1px solid rgba(255,255,255,0.1)",
+              width: "100%", maxWidth: "360px", background: "#0f1419", borderRadius: "20px",
+              padding: "24px", border: "1px solid rgba(255,255,255,0.1)", marginBottom: "20px",
             }}
-            onClick={(e) => e.stopPropagation()} // モーダル内クリックで閉じないように
+            onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <button 
-              onClick={() => setIsOpen(false)}
-              style={{
-                position: "absolute",
-                top: "12px",
-                right: "12px",
-                background: "rgba(255,255,255,0.1)",
-                border: "none",
-                color: "#fff",
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              ✕
-            </button>
-
-            {/* Content: Header */}
-            <div style={{ textAlign: "center", marginBottom: "20px" }}>
+            <div style={{ textAlign: "center", marginBottom: "16px" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: "0 0 4px", color: "#6366f1" }}>Chart Art</h2>
-              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", margin: 0 }}>DCA Simulation Result</p>
+              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", margin: 0 }}>DCA Simulation Result</p>
             </div>
 
-            {/* Input Chart */}
-            <div style={{ marginBottom: "16px" }}>
-              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", margin: "0 0 6px" }}>あなたの描いた変動予測</p>
-              <div style={{ height: "90px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", padding: "10px" }}>
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", margin: "0 0 4px" }}>予測変動</p>
+              <div style={{ height: "70px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", padding: "6px" }}>
                 <Line
                   data={{
                     labels: variations.map((_, i) => i),
@@ -146,10 +161,9 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
               </div>
             </div>
 
-            {/* Result Chart */}
-            <div style={{ marginBottom: "16px" }}>
-              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", margin: "0 0 6px" }}>積立損益率の推移</p>
-              <div style={{ height: "90px", background: "rgba(255,255,255,0.02)", borderRadius: "10px", padding: "10px" }}>
+            <div style={{ marginBottom: "12px" }}>
+              <p style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", margin: "0 0 4px" }}>損益推移</p>
+              <div style={{ height: "70px", background: "rgba(255,255,255,0.02)", borderRadius: "8px", padding: "6px" }}>
                 <Bar
                   data={{
                     labels: results.map((_, i) => i),
@@ -163,47 +177,47 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
               </div>
             </div>
 
-            {/* Summary */}
-            <div style={{ 
-              background: "rgba(99, 102, 241, 0.1)",
-              padding: "16px",
-              borderRadius: "12px",
-              border: "1px solid rgba(99, 102, 241, 0.2)"
-            }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
-                <div>
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)" }}>投資総額</div>
-                  <div style={{ fontSize: "14px", fontWeight: "600" }}>{summary.totalInvestment.toLocaleString()}円</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)" }}>最終評価額</div>
-                  <div style={{ fontSize: "14px", fontWeight: "600" }}>{summary.finalValue.toLocaleString()}円</div>
-                </div>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "12px" }}>
-                <div>
-                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)" }}>最終損益</div>
-                  <div style={{ fontSize: "20px", fontWeight: "bold", color: summary.profitLoss >= 0 ? "#10b981" : "#ef4444" }}>
-                    {summary.profitLoss >= 0 ? "+" : ""}{summary.profitLoss.toLocaleString()}円
-                  </div>
+            <div style={{ background: "rgba(99, 102, 241, 0.1)", padding: "14px", borderRadius: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontSize: "18px", fontWeight: "bold", color: summary.profitLoss >= 0 ? "#10b981" : "#ef4444" }}>
+                  {summary.profitLoss >= 0 ? "+" : ""}{summary.profitLoss.toLocaleString()}円
                 </div>
                 <div style={{ 
                   background: summary.profitLoss >= 0 ? "#10b981" : "#ef4444",
-                  color: "#fff",
-                  padding: "4px 10px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "bold"
+                  color: "#fff", padding: "2px 8px", borderRadius: "4px", fontSize: "12px", fontWeight: "bold"
                 }}>
                   {summary.profitLossRate.toFixed(2)}%
                 </div>
               </div>
             </div>
-
-            <p style={{ textAlign: "center", marginTop: "20px", fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>
-              スクショしてシェアしよう！
-            </p>
           </div>
+
+          {/* 生成された画像のプレビュー（長押し用） */}
+          {previewUrl && (
+            <div style={{ marginBottom: "20px", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+              <p style={{ color: "#fff", fontSize: "12px", marginBottom: "8px" }}>画像を長押しして「"写真"に保存」も可能です</p>
+              <img src={previewUrl} alt="Preview" style={{ width: "100%", maxWidth: "300px", borderRadius: "10px", boxShadow: "0 0 20px rgba(99, 102, 241, 0.5)" }} />
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: "10px", width: "100%", maxWidth: "360px" }} onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={handleSaveImage} disabled={isProcessing}
+              style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: "#fff", color: "#0f1419", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
+            >
+              {isProcessing ? "生成中..." : "保存・シェア"}
+            </button>
+            <button
+              onClick={handleCopyText}
+              style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.3)", background: "transparent", color: "#fff", fontWeight: "bold", cursor: "pointer", fontSize: "14px" }}
+            >
+              結果をコピー
+            </button>
+          </div>
+
+          <button onClick={() => setIsOpen(false)} style={{ marginTop: "24px", color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "pointer" }}>
+            閉じる
+          </button>
         </div>
       )}
     </>
