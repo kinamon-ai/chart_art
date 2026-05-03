@@ -1,18 +1,24 @@
 #!/bin/bash
 
-# 今日の日付を取得 (YYYYMMDD)
-TODAY=$(date +%Y%m%d)
+# エラーが発生したらその時点で実行を中止する
+set -e
 
-# 本日のコミット数を取得して、次の番号 (+1) を計算
-# git log で今日の日付から始まるコミットを数えます
+# 1. ビルドを試行
+echo "Running build check..."
+npm run build
+
+# 2. 今日の日付とコミット数を取得
+TODAY=$(date +%Y%m%d)
 COUNT=$(git log --oneline --since="midnight" | wc -l)
 NEXT_COUNT=$(printf "%02d" $((COUNT + 1)))
 
-# 第1引数があればそれをメッセージに、なければ「日付_番号」にする
+# 3. メッセージの決定
 MESSAGE=${1:-"${TODAY}_${NEXT_COUNT}"}
 
+# 4. Git 操作
 echo "Saving with message: $MESSAGE"
-
 git add .
 git commit -m "$MESSAGE"
 git push origin main
+
+echo "Successfully saved and pushed!"

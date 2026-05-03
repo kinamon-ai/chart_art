@@ -1,3 +1,18 @@
+import { useRef, useState, useEffect, useMemo } from "react";
+
+type Point = {
+  x: number;
+  y: number;
+};
+
+type Props = {
+  periods: number;
+  maxAbsPercent: number;
+  horizontalAxisLabel: string;
+  onVariationsChange: (variations: number[]) => void;
+  onHasStrokeChange: (hasStroke: boolean) => void;
+};
+
 // 描画領域の余白設定を定数として定義（リファクタリング対応）
 const CHART_MARGINS = {
   marginTop: 12,
