@@ -9,6 +9,7 @@ import {
 import { ResultChart } from "@/components/ResultChart";
 import { ShareButtons } from "@/components/ShareButtons";
 import { DrawVariationChart } from "@/components/DrawVariationChart";
+import { ScreenshotShare } from "@/components/ScreenshotShare";
 import {
   DEFAULTS,
   HORIZONTAL_AXIS_OPTIONS,
@@ -296,6 +297,7 @@ export function Simulator() {
               >
                 もう一回
               </button>
+              <ScreenshotShare results={results} summary={summary} variations={variations} />
               <div>
                 <p style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", color: "var(--muted)" }}>
                   共有
