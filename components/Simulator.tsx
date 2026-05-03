@@ -269,16 +269,6 @@ export function Simulator() {
                   {summary.profitLossRate.toFixed(2)}%）
                 </span>
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                <span style={{ color: "var(--muted)" }}>最終損益額</span>
-                <span
-                  style={{
-                    color: summary.profitLoss >= 0 ? "var(--positive)" : "var(--negative)",
-                  }}
-                >
-                  {summary.profitLoss.toLocaleString()} 円
-                </span>
-              </div>
             </div>
 
             <div

@@ -1,17 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useRef, useState } from "react";
-
-type Point = { x: number; y: number };
-
-type Props = {
-  periods: number;
-  maxAbsPercent: number;
-  horizontalAxisLabel: string;
-  onVariationsChange: (values: number[]) => void;
-  onHasStrokeChange: (hasStroke: boolean) => void;
-};
-
 // 描画領域の余白設定を定数として定義（リファクタリング対応）
 const CHART_MARGINS = {
   marginTop: 12,
@@ -93,7 +79,6 @@ export function DrawVariationChart({
     const toY = (y: number) => CHART_MARGINS.marginTop + y * plotHeight;
     // ------------------------------------
 
-
     ctx.fillStyle = "#0f1419";
     ctx.fillRect(0, 0, width, height);
 
@@ -165,7 +150,6 @@ export function DrawVariationChart({
   };
   // --------------------------------------------------------------------
 
-
   const onPointerDown = (event: React.PointerEvent<HTMLCanvasElement>) => {
     event.preventDefault();
     const point = pointFromEvent(event);
@@ -182,7 +166,6 @@ export function DrawVariationChart({
     if (!point) return;
     setPoints((prev) => {
       const last = prev[prev.length - 1];
-      // 近接判定の閾値は、新しい座標系に合わせて調整が必要かもしれません。
       if (last && Math.abs(last.x - point.x) < 0.001 && Math.abs(last.y - point.y) < 0.001) {
         return prev;
       }
