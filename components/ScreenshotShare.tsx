@@ -13,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar, Line } from "react-chartjs-2";
+import { SIMULATOR_CONSTANTS } from "@/lib/dca";
 
 ChartJS.register(
   CategoryScale,
@@ -86,7 +87,7 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
   };
 
   const handleCopyText = async () => {
-    const text = `ドルコスト平均法シミュレーション結果\n最終損益: ${summary.profitLoss.toLocaleString()}円 (${summary.profitLossRate.toFixed(2)}%)\n#ChartArt #DCA\n${window.location.href}`;
+    const text = `ドルコスト平均法シミュレーション結果\n投資額: 1回${SIMULATOR_CONSTANTS.investmentAmount.toLocaleString()}円 × ${results.length}回 = 合計${summary.totalInvestment.toLocaleString()}円\n最終損益: ${summary.profitLoss.toLocaleString()}円 (${summary.profitLossRate.toFixed(2)}%)\n#ChartArt #DCA\n${window.location.href}`;
     try {
       await navigator.clipboard.writeText(text);
       alert("結果をコピーしました！");
@@ -174,6 +175,23 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
                   }}
                   options={commonOptions}
                 />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "16px", padding: "0 4px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", color: "rgba(255,255,255,0.7)" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>1回あたりの投資</span>
+                  <span style={{ fontWeight: "600" }}>{SIMULATOR_CONSTANTS.investmentAmount.toLocaleString()}円</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>積立回数</span>
+                  <span style={{ fontWeight: "600" }}>{results.length}回</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end" }}>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>投資総額</span>
+                  <span style={{ fontWeight: "600" }}>{summary.totalInvestment.toLocaleString()}円</span>
+                </div>
               </div>
             </div>
 
