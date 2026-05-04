@@ -103,7 +103,11 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
     scales: {
       x: { display: false },
       y: {
-        grid: { color: "rgba(255,255,255,0.1)" },
+        beginAtZero: true,
+        grid: {
+          color: (context: any) => context.tick.value === 0 ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.1)",
+          lineWidth: (context: any) => context.tick.value === 0 ? 2 : 1,
+        },
         ticks: { color: "rgba(255,255,255,0.4)", font: { size: 9 } },
       },
     },
@@ -157,7 +161,18 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
                     labels: variations.map((_, i) => i),
                     datasets: [{ data: variations, borderColor: "#6366f1", borderWidth: 2, tension: 0.4 }],
                   }}
-                  options={commonOptions}
+                  options={{
+                    ...commonOptions,
+                    scales: {
+                      ...commonOptions.scales,
+                      y: {
+                        ...commonOptions.scales.y,
+                        // 0を中心とした対称なスケールにする
+                        min: -Math.max(...variations.map(Math.abs), 10),
+                        max: Math.max(...variations.map(Math.abs), 10),
+                      }
+                    }
+                  }}
                 />
               </div>
             </div>

@@ -140,21 +140,51 @@ export function Simulator() {
         </div>
 
         <div style={{ marginBottom: "1rem" }}>
-          <p style={{ margin: "0 0 0.45rem", color: "var(--muted)", fontSize: "0.9rem" }}>
-            積立回数: {periods} 回
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.6rem" }}>
+            <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>積立回数</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <input
+                type="number"
+                min={10}
+                max={200}
+                value={periods}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setPeriods(val);
+                  setShowResults(false);
+                  setChartResetSeed((prev) => prev + 1);
+                }}
+                onBlur={(e) => {
+                  // 範囲外の値を調整
+                  const val = Math.min(200, Math.max(10, Number(e.target.value)));
+                  setPeriods(val);
+                }}
+                style={{
+                  width: "70px",
+                  padding: "0.3rem 0.5rem",
+                  borderRadius: 6,
+                  border: "1px solid #2d3a47",
+                  background: "#0f1419",
+                  color: "var(--text)",
+                  fontSize: "0.9rem",
+                  textAlign: "right",
+                }}
+              />
+              <span style={{ color: "var(--muted)", fontSize: "0.9rem" }}>回</span>
+            </div>
+          </div>
           <input
             type="range"
             min={10}
             max={200}
-            step={10}
+            step={1}
             value={periods}
             onChange={(e) => {
               setPeriods(Number(e.target.value));
               setShowResults(false);
               setChartResetSeed((prev) => prev + 1);
             }}
-            style={{ width: "100%" }}
+            style={{ width: "100%", cursor: "pointer" }}
           />
           <div
             style={{
