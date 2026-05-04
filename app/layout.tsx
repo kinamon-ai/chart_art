@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ドルコスト平均法シミュレータ",
+  title: "手書きチャートでドルコスト平均法の体験",
   description:
-    "積立投資のドルコスト平均法を、価格変動シナリオでシミュレーションします。",
+    "チャートを手書きして積立投資のドルコスト平均法を、価格変動シナリオでシミュレーションします。",
 };
 
 export default function RootLayout({
