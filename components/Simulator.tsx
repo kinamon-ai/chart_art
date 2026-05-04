@@ -65,7 +65,7 @@ export function Simulator() {
     <div>
       <header style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0 0 0.5rem" }}>
-          ドルコスト平均法シミュレータ
+          手書きチャートでドルコスト平均法の体験!!
         </h1>
         <p style={{ color: "var(--muted)", margin: 0, fontSize: "0.95rem" }}>
           価格変動率（%）を手書きし、積立シミュレーションの結果を確認できます。
