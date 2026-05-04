@@ -146,7 +146,7 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
           >
             <div style={{ textAlign: "center", marginBottom: "16px" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "bold", margin: "0 0 4px", color: "#6366f1" }}>Chart Art</h2>
-              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", margin: 0 }}>DCA Simulation Result</p>
+              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", margin: 0 }}>ドルコストシミュレーター結果</p>
             </div>
 
             <div style={{ marginBottom: "12px" }}>
@@ -179,18 +179,18 @@ export function ScreenshotShare({ results, summary, variations }: Props) {
             </div>
 
             <div style={{ marginBottom: "16px", padding: "0 4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", color: "rgba(255,255,255,0.7)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "rgba(255,255,255,0.7)" }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>1回あたりの投資</span>
-                  <span style={{ fontWeight: "600" }}>{SIMULATOR_CONSTANTS.investmentAmount.toLocaleString()}円</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "9px" }}>1回あたりの投資</span>
+                  <span style={{ fontWeight: "600", fontSize: "13px" }}>{SIMULATOR_CONSTANTS.investmentAmount.toLocaleString()}円</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "center" }}>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>積立回数</span>
-                  <span style={{ fontWeight: "600" }}>{results.length}回</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "9px" }}>積立回数</span>
+                  <span style={{ fontWeight: "600", fontSize: "13px" }}>{results.length}回</span>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-end" }}>
-                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "8px" }}>投資総額</span>
-                  <span style={{ fontWeight: "600" }}>{summary.totalInvestment.toLocaleString()}円</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "9px" }}>投資総額</span>
+                  <span style={{ fontWeight: "600", fontSize: "13px" }}>{summary.totalInvestment.toLocaleString()}円</span>
                 </div>
               </div>
             </div>
